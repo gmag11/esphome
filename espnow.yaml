@@ -1,0 +1,13 @@
+esphome:
+  name: espnow
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+esp_now:
+  channel: 3
