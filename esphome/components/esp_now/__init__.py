@@ -22,7 +22,7 @@ from esphome.const import (
     # CONF_DISCOVERY_RETAIN,
     # CONF_DISCOVERY_UNIQUE_ID_GENERATOR,
     # CONF_DISCOVERY_OBJECT_ID_GENERATOR,
-    # CONF_ID,
+    CONF_ID,
     # CONF_FORMAT,
     # CONF_KEEPALIVE,
     # CONF_LEVEL,
@@ -51,7 +51,8 @@ from esphome.const import (
     # CONF_WILL_MESSAGE,
 )
 
-# from esphome.core import coroutine_with_priority, CORE
+from esphome.core import coroutine_with_priority, CORE
+
 # from esphome.components.esp32 import add_idf_sdkconfig_option
 
 # DEPENDENCIES = ["network"]
@@ -64,12 +65,16 @@ CONF_IFACE = "espnow_interface"
 CONF_RSSI = "espnow_rssi"
 CONF_ESP_NOW = "esp_now"
 
-esp_now_ns = cg.esphome_ns.namespace("CONF_ESP_NOW")
-EspNowSendAction = esp_now_ns.class_("EspNowSendAction", automation.Action)
-EspNowMessageTrigger = esp_now_ns.class_(
-    "EspNowMessageTrigger", automation.Trigger.template(cg.const_char_ptr), cg.Component
+esp_now_ns = cg.esphome_ns.namespace(CONF_ESP_NOW)
+ESPNOWComponent = esp_now_ns.class_("ESPNOWComponent", cg.Component)
+ESPNOWSendAction = esp_now_ns.class_("ESPNOWSendAction", automation.Action)
+ESPNOWMessageTrigger = esp_now_ns.class_(
+    "ESPNOWMessageTrigger", automation.Trigger.template(cg.const_char_ptr), cg.Component
 )
-EspNowComponent = esp_now_ns.class_("EspNowComponent", cg.Component)
+ESPNOWJsonMessageTrigger = esp_now_ns.class_(
+    "ESPNOWJsonMessageTrigger", automation.Trigger.template(cg.JsonObjectConst)
+)
+ESPNOWComponent = esp_now_ns.class_("ESPNOWComponent", cg.Component)
 
 
 def validate_config(value):
@@ -93,21 +98,25 @@ wifi_channel = cv.int_range(min=0, max=13)
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(EspNowComponent),
+            cv.GenerateID(): cv.declare_id(ESPNOWComponent),
             cv.Optional(
                 CONF_IFACE, default=CONF_ESP_IFACE_OPTIONS[0]
             ): validate_esp_iface,
             cv.Optional(CONF_CHANNEL): wifi_channel,
             cv.Optional(CONF_ON_MESSAGE): automation.validate_automation(
                 {
-                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(EspNowMessageTrigger),
+                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(ESPNOWMessageTrigger),
+                    cv.Optional(CONF_ADDRESS): cv.mac_address,
                     cv.Optional(CONF_RSSI): cv.int_range(-128, 30),
                     cv.Optional(CONF_PAYLOAD): cv.string,
                 }
             ),
             cv.Optional(CONF_ON_JSON_MESSAGE): automation.validate_automation(
                 {
-                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(EspNowMessageTrigger),
+                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
+                        ESPNOWJsonMessageTrigger
+                    ),
+                    cv.Optional(CONF_ADDRESS): cv.mac_address,
                     cv.Optional(CONF_RSSI): cv.string_strict,
                 }
             ),
@@ -120,7 +129,7 @@ CONFIG_SCHEMA = cv.All(
 
 ESP_NOW_SEND_ACTION_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(): cv.use_id(EspNowComponent),
+        cv.GenerateID(): cv.use_id(ESPNOWComponent),
         cv.Required(CONF_ADDRESS): cv.templatable(cv.mac_address),
         cv.Required(CONF_PAYLOAD): cv.templatable(cv.string),
     }
@@ -190,3 +199,20 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 # async def mqtt_connected_to_code(config, condition_id, template_arg, args):
 #     paren = await cg.get_variable(config[CONF_ID])
 #     return cg.new_Pvariable(condition_id, template_arg, paren)
+
+
+@coroutine_with_priority(40.0)
+async def to_code(config):
+    var = cg.new_Pvariable(config[CONF_ID])
+    await cg.register_component(var, config)
+    # Add required libraries for arduino
+    if CORE.is_esp8266:
+        cg.add_library("ESP8266WiFi", None)
+    elif CORE.is_esp32 and CORE.using_arduino:
+        cg.add_library("WiFi", None)
+
+    if CORE.using_arduino:
+        # https://github.com/gmag11/QuickEspNow
+        cg.add_library("https://github.com/gmag11/QuickEspNow.git", None)
+        # https://github.com/gmag11/QuickDebug
+        cg.add_library("https://github.com/gmag11/QuickDebug.git", None)

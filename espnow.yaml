@@ -10,8 +10,12 @@ esp32:
 logger:
 
 esp_now:
-  channel: 3
+  #  channel: 3
   espnow_interface: "STA"
-#wifi:
-#  ssid: "qwertyuii"
-#  password: "123456789"
+  on_message:
+    - address: "AA:BB:CC:DD:EE:FF"
+      then:
+        - logger.log: "Hello World"
+# wifi:
+#   ssid: "qwertyuii"
+#   password: "123456789"
