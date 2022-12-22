@@ -2,6 +2,7 @@
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
+import esphome.final_validate as fv
 from esphome import automation
 
 # from esphome.automation import Condition
@@ -46,6 +47,7 @@ from esphome.const import (
     CONF_TRIGGER_ID,
     # CONF_USE_ABBREVIATIONS,
     # CONF_USERNAME,
+    CONF_WIFI,
     # CONF_WILL_MESSAGE,
 )
 
@@ -60,8 +62,9 @@ AUTO_LOAD = ["json"]
 # CONF_SKIP_CERT_CN_CHECK = "skip_cert_cn_check"
 CONF_IFACE = "espnow_interface"
 CONF_RSSI = "espnow_rssi"
+CONF_ESP_NOW = "esp_now"
 
-esp_now_ns = cg.esphome_ns.namespace("esp_now")
+esp_now_ns = cg.esphome_ns.namespace("CONF_ESP_NOW")
 EspNowSendAction = esp_now_ns.class_("EspNowSendAction", automation.Action)
 EspNowMessageTrigger = esp_now_ns.class_(
     "EspNowMessageTrigger", automation.Trigger.template(cg.const_char_ptr), cg.Component
@@ -75,17 +78,26 @@ def validate_config(value):
     return out
 
 
-CONF_ESP_STA_IFACE = "STA"
-CONF_ESP_AP_IFACE = "AP"
+CONF_ESP_IFACE_OPTIONS = ["STA", "AP"]
 
-wifi_channel = cv.int_range(min=1, max=13)
+
+def validate_esp_iface(value):
+    value = cv.string_strict(value)
+    if value not in CONF_ESP_IFACE_OPTIONS:
+        raise cv.Invalid("Esp-Now interface should be either AP ot STA")
+    return value
+
+
+wifi_channel = cv.int_range(min=0, max=13)
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(EspNowComponent),
-            cv.Optional(CONF_IFACE, default=CONF_ESP_STA_IFACE): cv.string_strict,
-            cv.Optional(CONF_CHANNEL, default=1): wifi_channel,
+            cv.Optional(
+                CONF_IFACE, default=CONF_ESP_IFACE_OPTIONS[0]
+            ): validate_esp_iface,
+            cv.Optional(CONF_CHANNEL): wifi_channel,
             cv.Optional(CONF_ON_MESSAGE): automation.validate_automation(
                 {
                     cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(EspNowMessageTrigger),
@@ -114,6 +126,27 @@ ESP_NOW_SEND_ACTION_SCHEMA = cv.Schema(
     }
 )
 
+
+def _final_validate(_):
+    try:
+        esp_now_channel = fv.full_config.get()[CONF_ESP_NOW][CONF_CHANNEL]
+        has_channel = esp_now_channel is not None
+    except KeyError:
+        has_channel = False
+
+    try:
+        wifi_conf = fv.full_config.get()[CONF_WIFI]
+        has_wifi = wifi_conf is not None
+    except KeyError:
+        has_wifi = False
+
+    if has_wifi and has_channel:
+        raise cv.Invalid(
+            "If wifi is used esp-now will use same channel. So, channel must not be declared into esp-now"
+        )
+
+
+FINAL_VALIDATE_SCHEMA = _final_validate
 
 # @automation.register_action(
 #     "esp_now.publish", EspNowSendAction, ESP_NOW_SEND_ACTION_SCHEMA
