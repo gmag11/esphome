@@ -139,17 +139,17 @@ ESP_NOW_SEND_ACTION_SCHEMA = cv.Schema(
 def _final_validate(_):
     try:
         esp_now_channel = fv.full_config.get()[CONF_ESP_NOW][CONF_CHANNEL]
-        has_channel = esp_now_channel is not None
+        has_channel_ = esp_now_channel is not None
     except KeyError:
-        has_channel = False
+        has_channel_ = False
 
     try:
         wifi_conf = fv.full_config.get()[CONF_WIFI]
-        has_wifi = wifi_conf is not None
+        has_wifi_ = wifi_conf is not None
     except KeyError:
-        has_wifi = False
+        has_wifi_ = False
 
-    if has_wifi and has_channel:
+    if has_wifi_ and has_channel_:
         raise cv.Invalid(
             "If wifi is used esp-now will use same channel. So, channel must not be declared into esp-now"
         )
