@@ -40,13 +40,18 @@ namespace esphome {
     class ESPNOWComponent: public Component {
     public:
       ESPNOWComponent ();
-      void setup () override {}
+      void setup () override;
       void dump_config () override {}
       void loop () override {}
       void on_shutdown () override {}
-      float get_setup_priority () const override {return 40;}
-      bool can_proceed () override {return true;}
-      int32_t send (const uint8_t* dstAddress, const uint8_t* payload, size_t payload_len) {return 0;}
+      float get_setup_priority () const override { return 40; }
+      bool can_proceed () override { return true; }
+      int32_t send (const uint8_t* dstAddress, const uint8_t* payload, size_t payload_len) { return 0; }
+      void set_channel (int espnow_channel);
+      int get_channel ();
+    protected:
+      int channel = CURRENT_WIFI_CHANNEL;
+      void dataReceived (uint8_t* address, uint8_t* data, uint8_t len, signed int rssi, bool broadcast);
     };
 
     extern ESPNOWComponent* esp_now_component;
@@ -57,7 +62,7 @@ namespace esphome {
       void set_payload (const std::string& payload) {}
       void setup () override {}
       void dump_config () override {}
-      float get_setup_priority () const override {return 40;}
+      float get_setup_priority () const override { return 40; }
 
     protected:
       optional<uint8_t> payload_[250];
@@ -70,10 +75,10 @@ namespace esphome {
     public:
       ESPNOWSendAction (ESPNOWComponent* parent): parent_ (parent) {}
       TEMPLATABLE_VALUE (uint8_t[250], payload_)
-      TEMPLATABLE_VALUE (size_t, payload_len_)
-      TEMPLATABLE_VALUE (uint8_t[6], dstAddress_)
+        TEMPLATABLE_VALUE (size_t, payload_len_)
+        TEMPLATABLE_VALUE (uint8_t[6], dstAddress_)
 
-      void play (Ts... x) override {
+        void play (Ts... x) override {
         this->parent_->send (this->dstAddress_.value (x...), this->payload_.value (x...), this->payload_len_.value (x...));
       }
 

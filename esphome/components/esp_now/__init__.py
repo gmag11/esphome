@@ -4,6 +4,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 import esphome.final_validate as fv
 from esphome import automation
+import logging
 
 # from esphome.automation import Condition
 # from esphome.components import logger
@@ -53,6 +54,8 @@ from esphome.const import (
 
 from esphome.core import coroutine_with_priority, CORE
 
+_LOGGER = logging.getLogger(__name__)
+
 # from esphome.components.esp32 import add_idf_sdkconfig_option
 
 # DEPENDENCIES = ["network"]
@@ -64,6 +67,7 @@ AUTO_LOAD = ["json"]
 CONF_IFACE = "espnow_interface"
 CONF_RSSI = "espnow_rssi"
 CONF_ESP_NOW = "esp_now"
+CONF_COMPAT_MODE = "compat_mode"
 
 esp_now_ns = cg.esphome_ns.namespace(CONF_ESP_NOW)
 ESPNOWComponent = esp_now_ns.class_("ESPNOWComponent", cg.Component)
@@ -103,6 +107,7 @@ CONFIG_SCHEMA = cv.All(
                 CONF_IFACE, default=CONF_ESP_IFACE_OPTIONS[0]
             ): validate_esp_iface,
             cv.Optional(CONF_CHANNEL): wifi_channel,
+            cv.Optional(CONF_COMPAT_MODE, default=False): cv.boolean,
             cv.Optional(CONF_ON_MESSAGE): automation.validate_automation(
                 {
                     cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(ESPNOWMessageTrigger),
@@ -211,8 +216,20 @@ async def to_code(config):
     elif CORE.is_esp32 and CORE.using_arduino:
         cg.add_library("WiFi", None)
 
+    cg.add_define("USE_ESPNOW")
+    cg.add_global(esp_now_ns.using)
+
     if CORE.using_arduino:
         # https://github.com/gmag11/QuickEspNow
         cg.add_library("https://github.com/gmag11/QuickEspNow.git", None)
         # https://github.com/gmag11/QuickDebug
         cg.add_library("https://github.com/gmag11/QuickDebug.git", None)
+
+    compat_mode = config[CONF_COMPAT_MODE]
+
+    if compat_mode:
+        cg.add_define("ESP32_COMPAT_MODE")
+    try:
+        cg.add(var.set_channel(config[CONF_CHANNEL]))
+    except KeyError:
+        _LOGGER.info("ESP_NOW using current wifi channel")
