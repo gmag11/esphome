@@ -207,12 +207,12 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 
 
 @automation.register_action(
-    "mqtt.publish", ESPNOWSendAction, ESP_NOW_SEND_ACTION_SCHEMA
+    "esp_now.send", ESPNOWSendAction, ESP_NOW_SEND_ACTION_SCHEMA
 )
 async def espnow_send_action_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, paren)
-    template_ = await cg.templatable(config[CONF_ADDRESS], args, cg.std_string)
+    template_ = await cg.templatable(config[CONF_ADDRESS], args, cg.ComponentPtr)
     cg.add(var.set_dest_address(template_))
     template_ = await cg.templatable(config[CONF_PAYLOAD], args, cg.std_string)
     cg.add(var.set_payload(template_))

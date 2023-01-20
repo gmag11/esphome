@@ -103,8 +103,15 @@ namespace esphome {
         this->parent_->send (this->dstAddress_.value (x...), this->payload_.value (x...), this->payload_len_.value (x...));
       }
 
+      void set_payload (const std::string& payload) {}
+      void set_address (const uint8_t addr[6]) {}
+
     protected:
       ESPNOWComponent* parent_;
+      uint8_t dstAddress[6];
+      uint8_t payload_[250];
+      size_t payload_len = 0;
+
     };
   }
 }

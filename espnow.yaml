@@ -10,6 +10,7 @@ esp32:
 logger:
 
 esp_now:
+  id: espnow
   channel: 3
   espnow_interface: "STA"
   compat_mode: True
@@ -21,3 +22,14 @@ esp_now:
 # wifi:
 #  ssid: "qwertyuii"
 #  password: "123456789"
+
+script:
+  - id: send_message
+    mode:
+      restart # Light will be kept on during 1 minute since
+      # the latest time the script is executed
+    then:
+      - esp_now.send:
+          address: "aa:aa:aa:aa:aa:aa"
+          payload: "hello world"
+      - delay: 1 min
