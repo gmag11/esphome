@@ -122,7 +122,7 @@ CONFIG_SCHEMA = cv.All(
                         ESPNOWJsonMessageTrigger
                     ),
                     cv.Optional(CONF_ADDRESS): cv.mac_address,
-                    cv.Optional(CONF_RSSI): cv.string_strict,
+                    cv.Optional(CONF_RSSI): cv.int_range(-128, 30),
                 }
             ),
         }
@@ -206,6 +206,19 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 #     return cg.new_Pvariable(condition_id, template_arg, paren)
 
 
+@automation.register_action(
+    "mqtt.publish", ESPNOWSendAction, ESP_NOW_SEND_ACTION_SCHEMA
+)
+async def espnow_send_action_to_code(config, action_id, template_arg, args):
+    paren = await cg.get_variable(config[CONF_ID])
+    var = cg.new_Pvariable(action_id, template_arg, paren)
+    template_ = await cg.templatable(config[CONF_ADDRESS], args, cg.std_string)
+    cg.add(var.set_dest_address(template_))
+    template_ = await cg.templatable(config[CONF_PAYLOAD], args, cg.std_string)
+    cg.add(var.set_payload(template_))
+    return var
+
+
 @coroutine_with_priority(40.0)
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
@@ -233,3 +246,11 @@ async def to_code(config):
         cg.add(var.set_channel(config[CONF_CHANNEL]))
     except KeyError:
         _LOGGER.info("ESP_NOW using current wifi channel")
+
+    for conf in config.get(CONF_ON_MESSAGE, []):
+        trig = cg.new_Pvariable(conf[CONF_TRIGGER_ID])
+        cg.add(trig.set_min_rssi(conf[CONF_RSSI]))
+        if CONF_PAYLOAD in conf:
+            cg.add(trig.set_payload(conf[CONF_PAYLOAD]))
+        await cg.register_component(trig, conf)
+        await automation.build_automation(trig, [(cg.std_string, "x")], conf)

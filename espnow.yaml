@@ -15,6 +15,7 @@ esp_now:
   compat_mode: True
   on_message:
     - address: "AA:BB:CC:DD:EE:FF"
+      espnow_rssi: -60
       then:
         - logger.log: "Hello World"
 # wifi:
