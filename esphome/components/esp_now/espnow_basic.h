@@ -95,22 +95,22 @@ namespace esphome {
     template<typename... Ts> class ESPNOWSendAction: public Action<Ts...> {
     public:
       ESPNOWSendAction (ESPNOWComponent* parent): parent_ (parent) {}
-      TEMPLATABLE_VALUE (uint8_t[250], payload_)
-        TEMPLATABLE_VALUE (size_t, payload_len_)
-        TEMPLATABLE_VALUE (uint8_t[6], dstAddress_)
+      TEMPLATABLE_VALUE (std::string, payload_)
+      // //TEMPLATABLE_VALUE (size_t, payload_len_)
+      TEMPLATABLE_VALUE (uint64_t, dstAddress_)
 
-        void play (Ts... x) override {
-        this->parent_->send (this->dstAddress_.value (x...), this->payload_.value (x...), this->payload_len_.value (x...));
+      void play (Ts... x) override {
+        this->parent_->send (this->dstMacAddress_, (const uint8_t *)this->payload_.c_str (), this->payload_.length ());
       }
 
-      void set_payload (const std::string& payload) {}
-      void set_address (const uint8_t addr[6]) {}
+      void set_payload (const std::string& payload) { payload_ = payload; }
+      void set_dest_address (uint64_t addr) {  }
 
     protected:
       ESPNOWComponent* parent_;
-      uint8_t dstAddress[6];
-      uint8_t payload_[250];
-      size_t payload_len = 0;
+      uint8_t dstMacAddress_[6];
+      std::string payload_;
+      // size_t payload_len = 0;
 
     };
   }

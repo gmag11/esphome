@@ -212,7 +212,7 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 async def espnow_send_action_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, paren)
-    template_ = await cg.templatable(config[CONF_ADDRESS], args, cg.ComponentPtr)
+    template_ = await cg.templatable(config[CONF_ADDRESS].as_hex, args, cg.std_string)
     cg.add(var.set_dest_address(template_))
     template_ = await cg.templatable(config[CONF_PAYLOAD], args, cg.std_string)
     cg.add(var.set_payload(template_))
