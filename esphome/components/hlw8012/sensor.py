@@ -14,6 +14,11 @@ from esphome.const import (
     CONF_MODEL,
     CONF_VOLTAGE,
     CONF_VOLTAGE_DIVIDER,
+    CONF_VOLTAGE_RESISTOR_UPSTREAM,
+    CONF_VOLTAGE_RESISTOR_DOWNSTREAM,
+    CONF_VOLTAGE_MULTIPLIER,
+    CONF_CURRENT_MULTIPLIER,
+    CONF_POWER_MULTIPLIER,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -60,13 +65,13 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_CURRENT): sensor.sensor_schema(
             unit_of_measurement=UNIT_AMPERE,
-            accuracy_decimals=2,
+            accuracy_decimals=3,
             device_class=DEVICE_CLASS_CURRENT,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         cv.Optional(CONF_POWER): sensor.sensor_schema(
             unit_of_measurement=UNIT_WATT,
-            accuracy_decimals=1,
+            accuracy_decimals=2,
             device_class=DEVICE_CLASS_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
@@ -77,6 +82,11 @@ CONFIG_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_TOTAL_INCREASING,
         ),
         cv.Optional(CONF_CURRENT_RESISTOR, default=0.001): cv.resistance,
+        cv.Optional(CONF_VOLTAGE_RESISTOR_UPSTREAM, default=2350000): cv.positive_float,
+        cv.Optional(CONF_VOLTAGE_RESISTOR_DOWNSTREAM, default=1000): cv.positive_float,
+        cv.Optional(CONF_VOLTAGE_MULTIPLIER, default=281105): cv.positive_float,
+        cv.Optional(CONF_CURRENT_MULTIPLIER, default=25610): cv.positive_float,
+        cv.Optional(CONF_POWER_MULTIPLIER, default=3304057): cv.positive_float,
         cv.Optional(CONF_VOLTAGE_DIVIDER, default=2351): cv.positive_float,
         cv.Optional(CONF_MODEL, default="HLW8012"): cv.enum(MODELS, upper=True),
         cv.Optional(CONF_CHANGE_MODE_EVERY, default=8): cv.All(
@@ -113,6 +123,13 @@ async def to_code(config):
         sens = await sensor.new_sensor(config[CONF_ENERGY])
         cg.add(var.set_energy_sensor(sens))
     cg.add(var.set_current_resistor(config[CONF_CURRENT_RESISTOR]))
+    cg.add(var.set_voltage_resistor_upstream(config[CONF_VOLTAGE_RESISTOR_UPSTREAM]))
+    cg.add(
+        var.set_voltage_resistor_downstream(config[CONF_VOLTAGE_RESISTOR_DOWNSTREAM])
+    )
+    cg.add(var.set_voltage_multiplier(config[CONF_VOLTAGE_MULTIPLIER]))
+    cg.add(var.set_current_multiplier(config[CONF_CURRENT_MULTIPLIER]))
+    cg.add(var.set_power_multiplier(config[CONF_POWER_MULTIPLIER]))
     cg.add(var.set_voltage_divider(config[CONF_VOLTAGE_DIVIDER]))
     cg.add(var.set_change_mode_every(config[CONF_CHANGE_MODE_EVERY]))
     cg.add(var.set_initial_mode(INITIAL_MODES[config[CONF_INITIAL_MODE]]))
