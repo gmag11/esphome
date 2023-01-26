@@ -25,7 +25,7 @@ enum HLW8012SensorModels {
 class HLW8012Component : public PollingComponent {
  public:
   HLW8012Component()
-      : cf_store_(*pulse_counter::get_storage(USE_PCNT)), cf1_store_(*pulse_counter::get_storage(USE_PCNT)) {}
+    : cf_store_(*pulse_counter::get_storage(USE_PCNT)), cf1_store_(*pulse_counter::get_storage(USE_PCNT)) {}
 
   void setup() override;
   void dump_config() override;
@@ -38,7 +38,12 @@ class HLW8012Component : public PollingComponent {
   void set_sensor_model(HLW8012SensorModels sensor_model) { sensor_model_ = sensor_model; }
   void set_change_mode_every(uint32_t change_mode_every) { change_mode_every_ = change_mode_every; }
   void set_current_resistor(float current_resistor) { current_resistor_ = current_resistor; }
+  void set_voltage_resistor_upstream(uint32_t resistor_upstream) { voltage_resistor_upstream_ = resistor_upstream; }
+  void set_voltage_resistor_downstream (uint32_t resistor_downstream) { voltage_resistor_downstream_ = resistor_downstream; }
   void set_voltage_divider(float voltage_divider) { voltage_divider_ = voltage_divider; }
+  void set_voltage_multiplier(uint32_t voltage_multiplier) { voltage_multiplier_ = voltage_multiplier; }
+  void set_current_multiplier(uint32_t current_multiplier) { current_multiplier_ = current_multiplier; }
+  void set_power_multiplier(uint32_t power_multiplier) { power_multiplier_ = power_multiplier; }
   void set_sel_pin(GPIOPin *sel_pin) { sel_pin_ = sel_pin; }
   void set_cf_pin(InternalGPIOPin *cf_pin) { cf_pin_ = cf_pin; }
   void set_cf1_pin(InternalGPIOPin *cf1_pin) { cf1_pin_ = cf1_pin; }
@@ -48,28 +53,35 @@ class HLW8012Component : public PollingComponent {
   void set_energy_sensor(sensor::Sensor *energy_sensor) { energy_sensor_ = energy_sensor; }
 
  protected:
-  uint32_t nth_value_{0};
-  bool current_mode_{false};
-  uint32_t change_mode_at_{0};
-  uint32_t change_mode_every_{8};
-  float current_resistor_{0.001};
-  float voltage_divider_{2351};
-  HLW8012SensorModels sensor_model_{HLW8012_SENSOR_MODEL_HLW8012};
-  uint64_t cf_total_pulses_{0};
-  GPIOPin *sel_pin_;
-  InternalGPIOPin *cf_pin_;
-  pulse_counter::PulseCounterStorageBase &cf_store_;
-  InternalGPIOPin *cf1_pin_;
-  pulse_counter::PulseCounterStorageBase &cf1_store_;
-  sensor::Sensor *voltage_sensor_{nullptr};
-  sensor::Sensor *current_sensor_{nullptr};
-  sensor::Sensor *power_sensor_{nullptr};
-  sensor::Sensor *energy_sensor_{nullptr};
+  uint32_t nth_value_{ 0 };
+  bool current_mode_{ false };
+  uint32_t change_mode_at_{ 0 };
+  uint32_t change_mode_every_{ 8 };
+  float current_resistor_{ 0.001 };
+  float voltage_divider_{ 2351 };
+  HLW8012SensorModels sensor_model_{ HLW8012_SENSOR_MODEL_HLW8012 };
+  uint64_t cf_total_pulses_{ 0 };
+  GPIOPin* sel_pin_;
+  InternalGPIOPin* cf_pin_;
+  pulse_counter::PulseCounterStorageBase& cf_store_;
+  InternalGPIOPin* cf1_pin_;
+  pulse_counter::PulseCounterStorageBase& cf1_store_;
+  sensor::Sensor* voltage_sensor_{ nullptr };
+  sensor::Sensor* current_sensor_{ nullptr };
+  sensor::Sensor* power_sensor_{ nullptr };
+  sensor::Sensor* energy_sensor_{ nullptr };
 
-  float voltage_multiplier_{0.0f};
-  float current_multiplier_{0.0f};
-  float power_multiplier_{0.0f};
+  // float voltage_multiplier_{ 0.0f };
+  // float current_multiplier_{ 0.0f };
+  // float power_multiplier_{ 0.0f };
+
+  uint32_t voltage_resistor_upstream_{2350000};
+  uint32_t voltage_resistor_downstream_{1000};
+  uint32_t voltage_multiplier_{281105};
+  uint32_t current_multiplier_{25610};
+  uint32_t power_multiplier_{3304057};
+
 };
 
-}  // namespace hlw8012
+  }  // namespace hlw8012
 }  // namespace esphome
