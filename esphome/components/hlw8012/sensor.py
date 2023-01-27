@@ -3,9 +3,12 @@ import esphome.config_validation as cv
 from esphome import pins
 from esphome.components import sensor
 from esphome.const import (
-    CONF_CHANGE_MODE_EVERY,
+    CONF_ACTIVE,
+    # CONF_CHANGE_MODE_EVERY,
     CONF_INITIAL_MODE,
+    CONF_CALIBRATION,
     CONF_CURRENT,
+    CONF_CURRENT_CYCLES,
     CONF_CURRENT_RESISTOR,
     CONF_ID,
     CONF_POWER,
@@ -13,9 +16,8 @@ from esphome.const import (
     CONF_SEL_PIN,
     CONF_MODEL,
     CONF_VOLTAGE,
+    CONF_VOLTAGE_CYCLES,
     CONF_VOLTAGE_DIVIDER,
-    CONF_VOLTAGE_RESISTOR_UPSTREAM,
-    CONF_VOLTAGE_RESISTOR_DOWNSTREAM,
     CONF_VOLTAGE_MULTIPLIER,
     CONF_CURRENT_MULTIPLIER,
     CONF_POWER_MULTIPLIER,
@@ -48,6 +50,15 @@ MODELS = {
     "CSE7759": HLW8012SensorModels.HLW8012_SENSOR_MODEL_CSE7759,
     "BL0937": HLW8012SensorModels.HLW8012_SENSOR_MODEL_BL0937,
 }
+
+CALIBRATION_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_ACTIVE): cv.boolean,
+        cv.Optional(CONF_POWER, default=60): cv.positive_float,
+        cv.Optional(CONF_VOLTAGE, default=230): cv.positive_float,
+        cv.Optional(CONF_CURRENT, default=0.26): cv.positive_float,
+    }
+)
 
 CONF_CF1_PIN = "cf1_pin"
 CONF_CF_PIN = "cf_pin"
@@ -82,19 +93,24 @@ CONFIG_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_TOTAL_INCREASING,
         ),
         cv.Optional(CONF_CURRENT_RESISTOR, default=0.001): cv.resistance,
-        cv.Optional(CONF_VOLTAGE_RESISTOR_UPSTREAM, default=2350000): cv.positive_int,
-        cv.Optional(CONF_VOLTAGE_RESISTOR_DOWNSTREAM, default=1000): cv.positive_int,
-        cv.Optional(CONF_VOLTAGE_MULTIPLIER, default=281105): cv.positive_int,
-        cv.Optional(CONF_CURRENT_MULTIPLIER, default=25610): cv.positive_int,
-        cv.Optional(CONF_POWER_MULTIPLIER, default=3304057): cv.positive_int,
+        cv.Optional(CONF_VOLTAGE_MULTIPLIER, default=0): cv.positive_float,
+        cv.Optional(CONF_CURRENT_MULTIPLIER, default=0): cv.positive_float,
+        cv.Optional(CONF_POWER_MULTIPLIER, default=0): cv.positive_float,
         cv.Optional(CONF_VOLTAGE_DIVIDER, default=2351): cv.positive_float,
         cv.Optional(CONF_MODEL, default="HLW8012"): cv.enum(MODELS, upper=True),
-        cv.Optional(CONF_CHANGE_MODE_EVERY, default=8): cv.All(
+        # cv.Optional(CONF_CHANGE_MODE_EVERY, default=8): cv.All(
+        #     cv.uint32_t, cv.Range(min=1)
+        # ),
+        cv.Optional(CONF_CURRENT_CYCLES, default=4): cv.All(
+            cv.uint32_t, cv.Range(min=1)
+        ),
+        cv.Optional(CONF_VOLTAGE_CYCLES, default=2): cv.All(
             cv.uint32_t, cv.Range(min=1)
         ),
         cv.Optional(CONF_INITIAL_MODE, default=CONF_VOLTAGE): cv.one_of(
             *INITIAL_MODES, lower=True
         ),
+        cv.Optional(CONF_CALIBRATION): CALIBRATION_SCHEMA,
     }
 ).extend(cv.polling_component_schema("60s"))
 
@@ -124,13 +140,17 @@ async def to_code(config):
         cg.add(var.set_energy_sensor(sens))
     cg.add(var.set_current_resistor(config[CONF_CURRENT_RESISTOR]))
     cg.add(var.set_voltage_divider(config[CONF_VOLTAGE_DIVIDER]))
-    cg.add(var.set_voltage_resistor_upstream(config[CONF_VOLTAGE_RESISTOR_UPSTREAM]))
-    cg.add(
-        var.set_voltage_resistor_downstream(config[CONF_VOLTAGE_RESISTOR_DOWNSTREAM])
-    )
     cg.add(var.set_voltage_multiplier(config[CONF_VOLTAGE_MULTIPLIER]))
     cg.add(var.set_current_multiplier(config[CONF_CURRENT_MULTIPLIER]))
     cg.add(var.set_power_multiplier(config[CONF_POWER_MULTIPLIER]))
-    cg.add(var.set_change_mode_every(config[CONF_CHANGE_MODE_EVERY]))
+    # cg.add(var.set_change_mode_every(config[CONF_CHANGE_MODE_EVERY]))
+    cg.add(var.set_voltage_cycles(config[CONF_VOLTAGE_CYCLES]))
+    cg.add(var.set_current_cycles(config[CONF_CURRENT_CYCLES]))
     cg.add(var.set_initial_mode(INITIAL_MODES[config[CONF_INITIAL_MODE]]))
     cg.add(var.set_sensor_model(config[CONF_MODEL]))
+
+    if CONF_CALIBRATION in config:
+        cg.add(var.set_calibration(config[CONF_CALIBRATION][CONF_ACTIVE]))
+        cg.add(var.set_calibration_voltage(config[CONF_CALIBRATION][CONF_VOLTAGE]))
+        cg.add(var.set_calibration_current(config[CONF_CALIBRATION][CONF_CURRENT]))
+        cg.add(var.set_calibration_power(config[CONF_CALIBRATION][CONF_POWER]))
