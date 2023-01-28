@@ -19,6 +19,7 @@ from esphome.const import (
     CONF_VOLTAGE_MULTIPLIER,
     CONF_CURRENT_MULTIPLIER,
     CONF_APPARENT_POWER,
+    CONF_REACTIVE_POWER,
     CONF_POWER_MULTIPLIER,
     CONF_POWER_FACTOR,
     CONF_REPORT_INTERVAL,
@@ -27,6 +28,7 @@ from esphome.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_APPARENT_POWER,
     DEVICE_CLASS_POWER_FACTOR,
+    DEVICE_CLASS_REACTIVE_POWER,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -96,6 +98,12 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_APPARENT_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional(CONF_REACTIVE_POWER): sensor.sensor_schema(
+            unit_of_measurement=UNIT_WATT,
+            accuracy_decimals=2,
+            device_class=DEVICE_CLASS_REACTIVE_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
         cv.Optional(CONF_POWER_FACTOR): sensor.sensor_schema(
             unit_of_measurement=UNIT_PERCENT,
             accuracy_decimals=2,
@@ -152,6 +160,9 @@ async def to_code(config):
     if CONF_APPARENT_POWER in config:
         sens = await sensor.new_sensor(config[CONF_APPARENT_POWER])
         cg.add(var.set_apparent_power_sensor(sens))
+    if CONF_REACTIVE_POWER in config:
+        sens = await sensor.new_sensor(config[CONF_REACTIVE_POWER])
+        cg.add(var.set_reactive_power_sensor(sens))
     if CONF_POWER_FACTOR in config:
         sens = await sensor.new_sensor(config[CONF_POWER_FACTOR])
         cg.add(var.set_power_factor_sensor(sens))

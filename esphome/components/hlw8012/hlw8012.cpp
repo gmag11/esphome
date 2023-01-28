@@ -169,6 +169,10 @@ namespace esphome {
           this->apparent_power_sensor_->publish_state (apparent_power);
         }
 
+        if (this->reactive_power_sensor_ != nullptr) {
+          this->reactive_power_sensor_->publish_state (reactive_power);
+        }
+
         if (this->power_factor_sensor_ != nullptr) {
           this->power_factor_sensor_->publish_state (power_factor * 100);
         }

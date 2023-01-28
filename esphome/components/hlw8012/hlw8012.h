@@ -53,6 +53,7 @@ namespace esphome {
       void set_current_sensor (sensor::Sensor* current_sensor) { current_sensor_ = current_sensor; }
       void set_power_sensor (sensor::Sensor* power_sensor) { power_sensor_ = power_sensor; }
       void set_apparent_power_sensor (sensor::Sensor* apparent_power_sensor) { apparent_power_sensor_ = apparent_power_sensor; }
+      void set_reactive_power_sensor (sensor::Sensor* reactive_power_sensor) { reactive_power_sensor_ = reactive_power_sensor; }
       void set_power_factor_sensor (sensor::Sensor* power_factor_sensor) { power_factor_sensor_ = power_factor_sensor; }
       void set_energy_sensor (sensor::Sensor* energy_sensor) { energy_sensor_ = energy_sensor; }
       void set_calibration (bool enabled) { calibration_enabled_ = enabled; }
@@ -81,6 +82,7 @@ namespace esphome {
       sensor::Sensor* current_sensor_{ nullptr };
       sensor::Sensor* power_sensor_{ nullptr };
       sensor::Sensor* apparent_power_sensor_{ nullptr };
+      sensor::Sensor* reactive_power_sensor_{ nullptr };
       sensor::Sensor* power_factor_sensor_{ nullptr };
       sensor::Sensor* energy_sensor_{ nullptr };
 
