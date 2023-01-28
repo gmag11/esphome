@@ -4,11 +4,10 @@ from esphome import pins
 from esphome.components import sensor
 from esphome.const import (
     CONF_ACTIVE,
-    # CONF_CHANGE_MODE_EVERY,
+    CONF_CHANGE_MODE_EVERY,
     CONF_INITIAL_MODE,
     CONF_CALIBRATION,
     CONF_CURRENT,
-    CONF_CURRENT_CYCLES,
     CONF_CURRENT_RESISTOR,
     CONF_ID,
     CONF_POWER,
@@ -16,14 +15,18 @@ from esphome.const import (
     CONF_SEL_PIN,
     CONF_MODEL,
     CONF_VOLTAGE,
-    CONF_VOLTAGE_CYCLES,
     CONF_VOLTAGE_DIVIDER,
     CONF_VOLTAGE_MULTIPLIER,
     CONF_CURRENT_MULTIPLIER,
+    CONF_APPARENT_POWER,
     CONF_POWER_MULTIPLIER,
+    CONF_POWER_FACTOR,
+    CONF_REPORT_INTERVAL,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_APPARENT_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -31,6 +34,7 @@ from esphome.const import (
     UNIT_AMPERE,
     UNIT_WATT,
     UNIT_WATT_HOURS,
+    UNIT_PERCENT,
 )
 
 AUTO_LOAD = ["pulse_counter"]
@@ -86,6 +90,18 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional(CONF_APPARENT_POWER): sensor.sensor_schema(
+            unit_of_measurement=UNIT_WATT,
+            accuracy_decimals=2,
+            device_class=DEVICE_CLASS_APPARENT_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional(CONF_POWER_FACTOR): sensor.sensor_schema(
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=2,
+            device_class=DEVICE_CLASS_POWER_FACTOR,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
         cv.Optional(CONF_ENERGY): sensor.sensor_schema(
             unit_of_measurement=UNIT_WATT_HOURS,
             accuracy_decimals=1,
@@ -98,21 +114,19 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_POWER_MULTIPLIER, default=0): cv.positive_float,
         cv.Optional(CONF_VOLTAGE_DIVIDER, default=2351): cv.positive_float,
         cv.Optional(CONF_MODEL, default="HLW8012"): cv.enum(MODELS, upper=True),
-        # cv.Optional(CONF_CHANGE_MODE_EVERY, default=8): cv.All(
-        #     cv.uint32_t, cv.Range(min=1)
-        # ),
-        cv.Optional(CONF_CURRENT_CYCLES, default=4): cv.All(
+        cv.Optional(CONF_CHANGE_MODE_EVERY, default=3): cv.All(
             cv.uint32_t, cv.Range(min=1)
         ),
-        cv.Optional(CONF_VOLTAGE_CYCLES, default=2): cv.All(
-            cv.uint32_t, cv.Range(min=1)
+        # TODO: Check that report interval is higher than update interval
+        cv.Optional(CONF_REPORT_INTERVAL, default=60): cv.All(
+            cv.uint32_t, cv.Range(min=5)
         ),
         cv.Optional(CONF_INITIAL_MODE, default=CONF_VOLTAGE): cv.one_of(
             *INITIAL_MODES, lower=True
         ),
         cv.Optional(CONF_CALIBRATION): CALIBRATION_SCHEMA,
     }
-).extend(cv.polling_component_schema("60s"))
+).extend(cv.polling_component_schema("5s"))
 
 
 async def to_code(config):
@@ -135,6 +149,12 @@ async def to_code(config):
     if CONF_POWER in config:
         sens = await sensor.new_sensor(config[CONF_POWER])
         cg.add(var.set_power_sensor(sens))
+    if CONF_APPARENT_POWER in config:
+        sens = await sensor.new_sensor(config[CONF_APPARENT_POWER])
+        cg.add(var.set_apparent_power_sensor(sens))
+    if CONF_POWER_FACTOR in config:
+        sens = await sensor.new_sensor(config[CONF_POWER_FACTOR])
+        cg.add(var.set_power_factor_sensor(sens))
     if CONF_ENERGY in config:
         sens = await sensor.new_sensor(config[CONF_ENERGY])
         cg.add(var.set_energy_sensor(sens))
@@ -143,9 +163,10 @@ async def to_code(config):
     cg.add(var.set_voltage_multiplier(config[CONF_VOLTAGE_MULTIPLIER]))
     cg.add(var.set_current_multiplier(config[CONF_CURRENT_MULTIPLIER]))
     cg.add(var.set_power_multiplier(config[CONF_POWER_MULTIPLIER]))
-    # cg.add(var.set_change_mode_every(config[CONF_CHANGE_MODE_EVERY]))
-    cg.add(var.set_voltage_cycles(config[CONF_VOLTAGE_CYCLES]))
-    cg.add(var.set_current_cycles(config[CONF_CURRENT_CYCLES]))
+    cg.add(var.set_change_mode_every(config[CONF_CHANGE_MODE_EVERY]))
+    cg.add(var.set_sensor_report_interval(config[CONF_REPORT_INTERVAL]))
+    # cg.add(var.set_voltage_cycles(config[CONF_VOLTAGE_CYCLES]))
+    # cg.add(var.set_current_cycles(config[CONF_CURRENT_CYCLES]))
     cg.add(var.set_initial_mode(INITIAL_MODES[config[CONF_INITIAL_MODE]]))
     cg.add(var.set_sensor_model(config[CONF_MODEL]))
 

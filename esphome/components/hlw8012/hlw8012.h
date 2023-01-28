@@ -36,9 +36,10 @@ namespace esphome {
         current_mode_ = initial_mode == HLW8012_INITIAL_MODE_CURRENT;
       }
       void set_sensor_model (HLW8012SensorModels sensor_model) { sensor_model_ = sensor_model; }
-      //void set_change_mode_every (uint32_t change_mode_every) { change_mode_every_ = change_mode_every; }
-      void set_voltage_cycles (uint32_t cycles) { total_voltage_cycles_ = cycles; }
-      void set_current_cycles (uint32_t cycles) { total_current_cycles_ = cycles; }
+      void set_change_mode_every (uint32_t change_mode_every) { change_mode_every_ = change_mode_every; }
+      void set_sensor_report_interval (uint32_t report_interval) { report_interval_ = report_interval * 1000; }
+      // void set_voltage_cycles (uint32_t cycles) { total_voltage_cycles_ = cycles; }
+      // void set_current_cycles (uint32_t cycles) { total_current_cycles_ = cycles; }
 
       void set_current_resistor (float current_resistor) { current_resistor_ = current_resistor; }
       void set_voltage_divider (float voltage_divider) { voltage_divider_ = voltage_divider; }
@@ -51,6 +52,8 @@ namespace esphome {
       void set_voltage_sensor (sensor::Sensor* voltage_sensor) { voltage_sensor_ = voltage_sensor; }
       void set_current_sensor (sensor::Sensor* current_sensor) { current_sensor_ = current_sensor; }
       void set_power_sensor (sensor::Sensor* power_sensor) { power_sensor_ = power_sensor; }
+      void set_apparent_power_sensor (sensor::Sensor* apparent_power_sensor) { apparent_power_sensor_ = apparent_power_sensor; }
+      void set_power_factor_sensor (sensor::Sensor* power_factor_sensor) { power_factor_sensor_ = power_factor_sensor; }
       void set_energy_sensor (sensor::Sensor* energy_sensor) { energy_sensor_ = energy_sensor; }
       void set_calibration (bool enabled) { calibration_enabled_ = enabled; }
       void set_calibration_voltage (float voltage) { calibration_voltage_ = voltage; }
@@ -61,9 +64,10 @@ namespace esphome {
       uint32_t nth_value_{ 0 };
       bool current_mode_{ false };
       uint32_t change_mode_at_{ 0 };
-      // uint32_t change_mode_every_{ 8 };
-      uint32_t total_voltage_cycles_{ 2 };
-      uint32_t total_current_cycles_{ 4 };
+      uint32_t change_mode_every_{ 3 };
+      uint32_t report_interval_{ 60 * 1000 };
+      // uint32_t total_voltage_cycles_{ 2 };
+      // uint32_t total_current_cycles_{ 4 };
       float current_resistor_{ 0.001 };
       float voltage_divider_{ 2351 };
       HLW8012SensorModels sensor_model_{ HLW8012_SENSOR_MODEL_HLW8012 };
@@ -76,6 +80,8 @@ namespace esphome {
       sensor::Sensor* voltage_sensor_{ nullptr };
       sensor::Sensor* current_sensor_{ nullptr };
       sensor::Sensor* power_sensor_{ nullptr };
+      sensor::Sensor* apparent_power_sensor_{ nullptr };
+      sensor::Sensor* power_factor_sensor_{ nullptr };
       sensor::Sensor* energy_sensor_{ nullptr };
 
       float voltage_multiplier_{ 0.0f };
