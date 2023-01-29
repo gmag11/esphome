@@ -123,7 +123,7 @@ namespace esphome {
             current_multiplier_ *= ((double)calibration_current_ / current);
             ESP_LOGI (TAG, "[CALIBRATION] Calculated current multiplier %.6f", current_multiplier_);
           }
-          ESP_LOGD (TAG, "Got power=%.1fW, current=%.1fA", power, current);
+          ESP_LOGD (TAG, "Got power=%.3fW, current=%.3fA", power, current);
           // if (this->current_sensor_ != nullptr) {
           //   this->current_sensor_->publish_state (current);
           // }
@@ -133,7 +133,7 @@ namespace esphome {
             voltage_multiplier_ *= ((double)calibration_voltage_ / voltage);
             ESP_LOGI (TAG, "[CALIBRATION] Calculated voltage multiplier %.6f", voltage_multiplier_);
           }
-          ESP_LOGD (TAG, "Got power=%.1fW, voltage=%.1fV", power, voltage);
+          ESP_LOGD (TAG, "Got power=%.3fW, voltage=%.1fV", power, voltage);
           // if (this->voltage_sensor_ != nullptr) {
           //   this->voltage_sensor_->publish_state (voltage);
           // }
