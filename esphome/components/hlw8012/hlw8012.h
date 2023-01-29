@@ -37,7 +37,7 @@ namespace esphome {
       }
       void set_sensor_model (HLW8012SensorModels sensor_model) { sensor_model_ = sensor_model; }
       void set_change_mode_every (uint32_t change_mode_every) { change_mode_every_ = change_mode_every; }
-      void set_sensor_report_interval (uint32_t report_interval) { report_interval_ = report_interval * 1000; }
+      void set_sensor_report_interval (uint32_t report_interval) { report_interval_ = report_interval; }
       // void set_voltage_cycles (uint32_t cycles) { total_voltage_cycles_ = cycles; }
       // void set_current_cycles (uint32_t cycles) { total_current_cycles_ = cycles; }
 

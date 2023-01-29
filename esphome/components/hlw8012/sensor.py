@@ -1,5 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
+import esphome.final_validate as fv
 from esphome import pins
 from esphome.components import sensor
 from esphome.const import (
@@ -23,6 +24,9 @@ from esphome.const import (
     CONF_POWER_MULTIPLIER,
     CONF_POWER_FACTOR,
     CONF_REPORT_INTERVAL,
+    CONF_SENSOR,
+    CONF_PLATFORM,
+    CONF_UPDATE_INTERVAL,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -68,6 +72,17 @@ CALIBRATION_SCHEMA = cv.Schema(
 
 CONF_CF1_PIN = "cf1_pin"
 CONF_CF_PIN = "cf_pin"
+
+
+def validate_report_interval(value):
+    value = cv.positive_time_period_milliseconds(value)
+    if value < cv.time_period("0s"):
+        raise cv.Invalid(
+            "HLW8012 report interval must be greater than or equal to 0 seconds if set."
+        )
+    return value
+
+
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(HLW8012Component),
@@ -126,15 +141,36 @@ CONFIG_SCHEMA = cv.Schema(
             cv.uint32_t, cv.Range(min=1)
         ),
         # TODO: Check that report interval is higher than update interval
-        cv.Optional(CONF_REPORT_INTERVAL, default=60): cv.All(
-            cv.uint32_t, cv.Range(min=5)
-        ),
+        cv.Optional(CONF_REPORT_INTERVAL, default="60s"): validate_report_interval,
         cv.Optional(CONF_INITIAL_MODE, default=CONF_VOLTAGE): cv.one_of(
             *INITIAL_MODES, lower=True
         ),
         cv.Optional(CONF_CALIBRATION): CALIBRATION_SCHEMA,
     }
 ).extend(cv.polling_component_schema("5s"))
+
+
+def _final_validate(_):
+    try:
+        full_config_sensor = fv.full_config.get()[CONF_SENSOR]
+        for sensor_entry in full_config_sensor:
+            if sensor_entry[CONF_PLATFORM] == "hlw8012":
+                if (
+                    sensor_entry[CONF_REPORT_INTERVAL]
+                    < sensor_entry[CONF_UPDATE_INTERVAL]
+                ):
+                    # report interval must be greater or equal than update interval
+                    sensor_entry[CONF_REPORT_INTERVAL] = sensor_entry[
+                        CONF_UPDATE_INTERVAL
+                    ]
+                    # raise cv.Invalid(
+                    #     "HLW8012 Report interval must be greater or equal than update interval"
+                    # )
+    except KeyError:
+        print("Key error")
+
+
+FINAL_VALIDATE_SCHEMA = _final_validate
 
 
 async def to_code(config):
