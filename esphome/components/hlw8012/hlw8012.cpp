@@ -94,13 +94,13 @@ namespace esphome {
         // don't count single pulse as power
         cf_hz = 0.0f;
       }
-      ESP_LOGD (TAG, "raw_cf: %d, cf_hz: %f", raw_cf, cf_hz);
+      ESP_LOGVV (TAG, "raw_cf: %d, cf_hz: %f", raw_cf, cf_hz);
       float cf1_hz = raw_cf1 / (this->get_update_interval () / 1000.0f);
       if (raw_cf1 <= 1) {
         // don't count single pulse as anything
         cf1_hz = 0.0f;
       }
-      ESP_LOGD (TAG, "raw_cf1: %d, cf1_hz: %f", raw_cf1, cf1_hz);
+      ESP_LOGVV (TAG, "raw_cf1: %d, cf1_hz: %f", raw_cf1, cf1_hz);
 
       if (this->nth_value_++ < 2) {
         return;
