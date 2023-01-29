@@ -141,11 +141,12 @@ namespace esphome {
       }
 
       apparent_power = voltage * current;
-      reactive_power = sqrt (apparent_power * apparent_power - power * power);
       if (apparent_power > 0) {
+        reactive_power = sqrt (apparent_power * apparent_power - power * power);
         power_factor = (double)power / apparent_power;
       } else {
         power_factor = 0;
+        reactive_power = 0;
       }
 
       if (millis () - last_report >= this->report_interval_) {
